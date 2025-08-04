@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shirt Pattern Generator</title>
+  <link rel="stylesheet" href="static/style.css">
+  <style>
+    /* Additional styles for shirt pattern generator */
+    .fit-container {
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .fit-container:hover {
+      border-color: #3366cc;
+      background-color: #f8f9ff;
+    }
+    
+    .help-text {
+      color: #666;
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 4px;
+      line-height: 1.3;
+      display: block;
+    }
+    
+    .measurement-help {
+      background: #f0f8ff;
+      border-left: 4px solid #3366cc;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .measurement-help h4 {
+      margin: 0 0 10px 0;
+      color: #2c5aa0;
+    }
+    
+    .fit-info {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .fit-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 5px;
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+    }
+    
+    .fit-card h5 {
+      color: #3366cc;
+      margin: 0 0 8px 0;
+    }
+    
+    .pattern-summary {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .pattern-summary h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .loading-spinner {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3366cc;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error-container, .success-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1001;
+      max-width: 400px;
+    }
+    
+    .error-message, .success-message {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .error-message {
+      border-left: 4px solid #dc3545;
+    }
+    
+    .success-message {
+      border-left: 4px solid #28a745;
+    }
+    
+    .error-close, .success-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 15px;
+    }
+    
+    .measure {
+      margin-bottom: 20px;
+    }
+    
+    .measure label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    
+    .measure input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .measure input:focus {
+      outline: none;
+      border-color: #3366cc;
+      box-shadow: 0 0 0 2px rgba(51, 102, 204, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Generating your shirt pattern...</p>
+    </div>
+  </div>
+
+  <!-- Error Message Container -->
+  <div id="error-container" class="error-container" style="display: none;">
+    <div class="error-message">
+      <span class="error-text"></span>
+      <button class="error-close">×</button>
+    </div>
+  </div>
+
+  <!-- Success Message Container -->
+  <div id="success-container" class="success-container" style="display: none;">
+    <div class="success-message">
+      <span class="success-text"></span>
+      <button class="success-close">×</button>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Category Selection -->
+  <section id="category-section">
+    <div class="header">
+      <h1>Shirt Pattern Generator</h1>
+      <p class="subtitle">Create custom shirt patterns for your perfect fit</p>
+      
+      <div class="fit-info">
+        <div class="fit-card">
+          <h5>🎯 Slim Fit</h5>
+          <p>Close-fitting with minimal ease. Perfect for a modern, tailored look.</p>
+        </div>
+        <div class="fit-card">
+          <h5>👔 Regular Fit</h5>
+          <p>Classic comfortable fit. Traditional proportions that work for most body types.</p>
+        </div>
+        <div class="fit-card">
+          <h5>😌 Loose Fit</h5>
+          <p>Relaxed fit with extra ease. Great for comfort and layering.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="category-grid">
+      <button class="category-btn">
+        <span class="btn-icon">👔</span>
+        <span class="btn-text">Shirts</span>
+      </button>
+      <button class="category-btn" disabled style="opacity: 0.5;">
+        <span class="btn-icon">👖</span>
+        <span class="btn-text">Bottoms</span>
+        <small style="display: block; font-size: 10px;">Coming Soon</small>
+      </button>
+      <button class="category-btn" disabled style="opacity: 0.5;">
+        <span class="btn-icon">👗</span>
+        <span class="btn-text">Dresses</span>
+        <small style="display: block; font-size: 10px;">Coming Soon</small>
+      </button>
+      <button class="category-btn" disabled style="opacity: 0.5;">
+        <span class="btn-icon">🧥</span>
+        <span class="btn-text">Outerwear</span>
+        <small style="display: block; font-size: 10px;">Coming Soon</small>
+      </button>
+    </div>
+  </section>
+
+  <!-- SECTION 2: Style Selection -->
+  <section id="style-section" style="display: none;">
+    <div class="section-header">
+      <h2>Choose Your Style</h2>
+      <p class="section-subtitle">Select the shirt style and fit you'd like to create</p>
+    </div>
+    <div class="style-grid" id="style-options"></div>
+    <div class="navigation-buttons">
+      <button class="nav-btn secondary">← Back to Categories</button>
+    </div>
+  </section>
+
+  <!-- SECTION 3: Measurement Form -->
+  <section id="measurement-section" style="display: none;">
+    <div class="section-header">
+      <h2>Enter Your Measurements</h2>
+      <p class="section-subtitle">Provide accurate measurements in centimeters for the best fit</p>
+      
+      <div class="measurement-help">
+        <h4>📏 Measurement Tips</h4>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li>Take measurements over fitted undergarments only</li>
+          <li>Keep measuring tape snug but not tight</li>
+          <li>Stand in natural posture</li>
+          <li>Have someone help you for best accuracy</li>
+          <li>Measure twice to confirm accuracy</li>
+        </ul>
+      </div>
+    </div>
+
+    <form id="measurement-form" class="measurement-form">
+      <div id="measurement-fields" class="measurement-grid"></div>
+      
+      <div class="form-footer">
+        <div class="customer-info">
+          <label for="customer-name">Customer Name (Optional)</label>
+          <input type="text" id="customer-name" name="customer-name" placeholder="Enter name for pattern">
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="nav-btn secondary">← Back</button>
+          <button type="submit" class="nav-btn primary">Generate Pattern</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- SECTION 4: Pattern Output -->
+  <section id="pattern-output-section" style="display: none;">
+    <div class="section-header">
+      <h2>Your Shirt Pattern is Ready!</h2>
+      <p class="section-subtitle">Professional pattern pieces and construction guide</p>
+    </div>
+
+    <!-- Download Section -->
+    <div class="download-section">
+      <div class="download-card">
+        <div class="download-info">
+          <h3>📄 Complete Pattern Package</h3>
+          <p>Professional PDF with all pattern pieces, measurements, cutting instructions, and construction notes</p>
+        </div>
+        <button id="download-btn" class="download-btn">
+          <span class="download-icon">📥</span>
+          Download PDF Pattern
+        </button>
+      </div>
+    </div>
+
+    <!-- Pattern Summary -->
+    <div class="pattern-summary">
+      <h3>🎯 Pattern Features</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+        <div>
+          <strong>✅ Professional Construction</strong>
+          <p>Industry-standard seam allowances and construction methods</p>
+        </div>
+        <div>
+          <strong>📐 Precise Fit</strong>
+          <p>Based on your exact measurements with appropriate ease</p>
+        </div>
+        <div>
+          <strong>🔧 Complete Guide</strong>
+          <p>Step-by-step instructions and construction notes</p>
+        </div>
+        <div>
+          <strong>📏 Pattern Pieces</strong>
+          <p>All components needed for a complete shirt</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pattern Visualization -->
+    <div class="pattern-visualization">
+      <h3>Pattern Layout Preview</h3>
+      <div class="svg-container">
+        <svg id="pattern-svg" width="100%" height="600" viewBox="0 0 1470 600" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse">
+              <path d="M0,5 L10,0 L10,10 Z" fill="#000"/>
+            </marker>
+            <marker id="arrowEnd" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+              <path d="M0,0 L10,5 L0,10 Z" fill="#000"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Pattern Details Table -->
+    <div class="pattern-details">
+      <h3>Pattern Pieces Specification</h3>
+      <div class="table-container">
+        <table id="pattern-table">
+          <thead>
+            <tr>
+              <th>Pattern Piece</th>
+              <th>Dimensions</th>
+              <th>Cutting Instructions</th>
+              <th>Grainline</th>
+              <th>Notches & Details</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Construction Notes -->
+    <div class="pattern-summary">
+      <h3>🔨 Construction Overview</h3>
+      <div style="columns: 2; column-gap: 30px;">
+        <p><strong>1. Preparation:</strong> Interface collar, collar band, cuffs, and button bands</p>
+        <p><strong>2. Bodice:</strong> Join front and back at shoulders and sides</p>
+        <p><strong>3. Yoke:</strong> Attach back yoke for professional finish</p>
+        <p><strong>4. Sleeves:</strong> Set sleeves and attach cuffs with plackets</p>
+        <p><strong>5. Collar:</strong> Construct collar and attach to neckline</p>
+        <p><strong>6. Finishing:</strong> Add buttons, buttonholes, and final pressing</p>
+      </div>
+    </div>
+
+    <div class="navigation-buttons">
+      <button class="nav-btn secondary">← Back to Measurements</button>
+      <button class="nav-btn secondary">Create New Pattern</button>
+    </div>
+  </section>
+
+  <script src="static/script.js"></script>
+</body>
+</html>
